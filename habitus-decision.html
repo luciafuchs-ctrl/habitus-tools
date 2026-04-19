@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>habitus — Produkt-Entscheidung</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream: #F7F3EE; --brown: #2C1810; --terra: #C4632A; --terra-l: #F0DDD1;
+  --gray: #8A7E76; --light: #EDE8E2; --white: #FDFAF7; --border: #E2DCD5;
+  --green: #1E6644; --green-l: #D6EDE1; --red: #8C2A1C; --red-l: #F5DDD9;
+  --amber: #7A4F0A; --amber-l: #FBE8C8; --blue: #1A4A7A; --blue-l: #D6E4F5;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--brown); }
+
+header { background: var(--white); border-bottom: 1px solid var(--border); padding: 1.25rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+.logo { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--terra); }
+.logo span { color: var(--brown); font-size: 14px; font-family: 'DM Sans', sans-serif; font-weight: 300; margin-left: 10px; }
+
+.layout { display: grid; grid-template-columns: 300px 1fr; min-height: calc(100vh - 57px); }
+
+/* LEFT */
+.left { background: var(--white); border-right: 1px solid var(--border); padding: 1.5rem; overflow-y: auto; }
+.panel-label { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray); margin-bottom: 1rem; }
+.sep { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--terra); margin: 1.25rem 0 0.75rem; padding-top: 1rem; border-top: 1px solid var(--terra-l); }
+.sg { margin-bottom: 1rem; }
+.sg-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.sg-label { font-size: 13px; color: var(--brown); }
+.sg-val { font-size: 14px; font-weight: 500; color: var(--terra); }
+.sg-sub { font-size: 11px; color: var(--gray); font-weight: 300; margin-bottom: 6px; }
+input[type=range] { width: 100%; -webkit-appearance: none; height: 3px; background: var(--light); border-radius: 2px; outline: none; cursor: pointer; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--terra); cursor: pointer; border: 2.5px solid var(--white); box-shadow: 0 0 0 1.5px var(--terra); }
+.sg-range { display: flex; justify-content: space-between; font-size: 10px; color: var(--gray); margin-top: 3px; }
+
+/* RIGHT */
+.right { padding: 1.5rem 1.75rem; overflow-y: auto; }
+
+/* VERDICT */
+.verdict { border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 1rem; }
+.verdict-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+.verdict-text { font-family: 'DM Serif Display', serif; font-size: 18px; }
+.verdict-sub { font-size: 12px; font-weight: 300; margin-top: 3px; }
+
+/* GRID */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.grid4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 12px; }
+.card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+.card-label { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray); margin-bottom: 12px; }
+.card-title { font-family: 'DM Serif Display', serif; font-size: 15px; color: var(--brown); margin-bottom: 12px; }
+
+/* METRIC */
+.metric { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; text-align: center; }
+.mval { font-family: 'DM Serif Display', serif; font-size: 24px; line-height: 1; margin-bottom: 5px; }
+.mlabel { font-size: 11px; color: var(--gray); font-weight: 300; line-height: 1.4; }
+.msub { font-size: 11px; font-weight: 500; margin-top: 5px; }
+
+/* ROWS */
+.drow { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--light); font-size: 13px; }
+.drow:last-child { border-bottom: none; }
+.dlabel { color: var(--gray); font-weight: 300; }
+.dtotal { display: flex; justify-content: space-between; padding: 10px 0 0; margin-top: 8px; border-top: 1.5px solid var(--border); font-size: 13px; font-weight: 500; }
+
+/* BARS */
+.bar-wrap { background: var(--light); border-radius: 3px; height: 8px; overflow: hidden; margin: 4px 0 12px; }
+.bar-fill { height: 8px; border-radius: 3px; transition: width 0.3s; }
+.bar-header { display: flex; justify-content: space-between; font-size: 12px; }
+
+/* LTV TABLE */
+.ltv-grid { display: grid; grid-template-columns: 1fr repeat(4,1fr); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; font-size: 12px; }
+.ltv-cell { padding: 9px 10px; border-bottom: 1px solid var(--light); border-right: 1px solid var(--light); }
+.ltv-cell:last-child, .ltv-cell:nth-child(5n) { border-right: none; }
+.ltv-head { background: var(--cream); font-weight: 500; font-size: 11px; color: var(--gray); }
+.ltv-label { color: var(--gray); font-weight: 300; }
+
+/* CASHFLOW TIMELINE */
+.cf-timeline { display: flex; gap: 8px; margin-bottom: 8px; }
+.cf-phase { flex: 1; border-radius: 8px; padding: 10px; font-size: 11px; text-align: center; }
+.cf-phase-label { font-weight: 500; margin-bottom: 3px; font-size: 12px; }
+.cf-phase-sub { font-weight: 300; color: var(--gray); }
+.cf-arrow { display: flex; align-items: center; color: var(--gray); font-size: 16px; flex-shrink: 0; }
+
+.c-green { color: var(--green); } .c-red { color: var(--red); } .c-amber { color: var(--amber); }
+.c-terra { color: var(--terra); } .c-gray { color: var(--gray); } .c-blue { color: var(--blue); }
+.bg-green { background: var(--green); } .bg-red { background: var(--red); }
+.bg-amber { background: #C4872A; } .bg-terra { background: var(--terra); }
+.bg-blue { background: var(--blue); }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">habitus <span>Produkt-Entscheidung · Ausmalpostkarten</span></div>
+  <div style="font-size:12px;color:var(--gray);font-weight:300">1 $ = 0,8482 € · MwSt. 19 %</div>
+</header>
+
+<div class="layout">
+<div class="left">
+  <p class="panel-label">Annahmen</p>
+
+  <p class="sep">Produkt & Kosten</p>
+  <div class="sg"><div class="sg-header"><span class="sg-label">Produktionskosten</span><span class="sg-val" id="s-prod">7,86 $</span></div><input type="range" min="2" max="20" step="0.1" value="7.86" id="prod"><div class="sg-range"><span>2 $</span><span>20 $</span></div></div>
+  <div class="sg"><div class="sg-header"><span class="sg-label">Lager + Fulfillment</span><span class="sg-val" id="s-lager">2,00 €</span></div><div class="sg-sub">pro Stück</div><input type="range" min="0" max="6" step="0.1" value="2.0" id="lager"><div class="sg-range"><span>0 €</span><span>6 €</span></div></div>
+  <div class="sg"><div class="sg-header"><span class="sg-label">Versandtüte</span><span class="sg-val" id="s-tuete">0,40 €</span></div><input type="range" min="0.1" max="2" step="0.05" value="0.40" id="tuete"><div class="sg-range"><span>0,10 €</span><span>2 €</span></div></div>
+  <div class="sg"><div class="sg-header"><span class="sg-label">Retourenquote</span><span class="sg-val" id="s-ret">3 %</span></div><input type="range" min="0" max="20" step="1" value="3" id="ret"><div class="sg-range"><span>0 %</span><span>20 %</span></div></div>
+
+  <p class="sep">Preise & Marketing</p>
+  <div class="sg"><div class="sg-header"><span class="sg-label">Verkaufspreis brutto</span><span class="sg-val" id="s-vk">49,99 €</span></div><input type="range" min="29" max="99" step="1" value="49.99" id="vk"><div class="sg-range"><span>29 €</span><span>99 €</span></div></div>
+  <div class="sg"><div class="sg-header"><span class="sg-label">MER</span><span class="sg-val" id="s-mer">3,8×</span></div><div class="sg-sub">Media Efficiency Ratio</div><input type="range" min="0.5" max="12" step="0.1" value="3.8" id="mer"><div class="sg-range"><span>0,5×</span><span>12×</span></div></div>
+  <div class="sg"><div class="sg-header"><span class="sg-label">Monatlicher Adspend</span><span class="sg-val" id="s-ads">6.000 €</span></div><input type="range" min="500" max="50000" step="500" value="6000" id="ads"><div class="sg-range"><span>500 €</span><span>50.000 €</span></div></div>
+  <div class="sg"><div class="sg-header"><span class="sg-label">Fixe OpEx / Monat</span><span class="sg-val" id="s-opex">9.000 €</span></div><div class="sg-sub">Team, Tools, Miete etc.</div><input type="range" min="500" max="40000" step="500" value="9000" id="opex"><div class="sg-range"><span>500 €</span><span>40.000 €</span></div></div>
+
+  <p class="sep">Vorfinanzierung (MOQ)</p>
+  <div class="sg"><div class="sg-header"><span class="sg-label">Bestellmenge (MOQ)</span><span class="sg-val" id="s-moq">3.000</span></div><input type="range" min="500" max="5000" step="500" value="3000" id="moq"><div class="sg-range"><span>500</span><span>5.000</span></div></div>
+  <div class="sg"><div class="sg-header"><span class="sg-label">Seefracht + Zoll gesamt</span><span class="sg-val" id="s-freight">1.300 €</span></div><input type="range" min="200" max="5000" step="100" value="1300" id="freight"><div class="sg-range"><span>200 €</span><span>5.000 €</span></div></div>
+
+  <p class="sep">LTV-Annahmen</p>
+  <div class="sg"><div class="sg-header"><span class="sg-label">Ø Wiederkaufsrate</span><span class="sg-val" id="s-ltv">25 %</span></div><div class="sg-sub">% kaufen nochmal innerhalb 12 Monate</div><input type="range" min="0" max="80" step="5" value="25" id="ltv"><div class="sg-range"><span>0 %</span><span>80 %</span></div></div>
+  <div class="sg"><div class="sg-header"><span class="sg-label">Ø Wiederkauf-VK</span><span class="sg-val" id="s-ltv-vk">44,99 €</span></div><div class="sg-sub">z.B. MnZ-Set beim Wiederkauf</div><input type="range" min="19" max="99" step="1" value="44.99" id="ltv-vk"><div class="sg-range"><span>19 €</span><span>99 €</span></div></div>
+</div>
+
+<div class="right">
+
+  <!-- VERDICT -->
+  <div class="verdict" id="verdict"></div>
+
+  <!-- KPIs -->
+  <div class="grid4" id="kpis"></div>
+
+  <!-- SECTION 1: BREAK-EVEN -->
+  <div class="grid2">
+    <div class="card">
+      <p class="card-label">Break-even Analyse</p>
+      <div id="be-content"></div>
+    </div>
+    <div class="card">
+      <p class="card-label">Kostenstruktur (% Nettoumsatz)</p>
+      <div id="cost-bars"></div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: CASHFLOW TIMELINE -->
+  <div class="card" style="margin-bottom:12px">
+    <p class="card-label">Cashflow-Timeline — Vorfinanzierung vs. Rückfluss</p>
+    <div id="cf-content"></div>
+  </div>
+
+  <!-- SECTION 3: LTV -->
+  <div class="card" style="margin-bottom:12px">
+    <p class="card-label">LTV-Szenarien — was ändert sich wenn Kundinnen wiederkommen?</p>
+    <div id="ltv-content"></div>
+  </div>
+
+  <!-- SECTION 4: MONTHLY P&L -->
+  <div class="card">
+    <p class="card-label">Monatliche P&L bei aktuellem Adspend</p>
+    <div id="pnl-content"></div>
+  </div>
+
+</div>
+</div>
+
+<script>
+const USD = 0.8482, MWST = 0.19, SHOPIFY_PCT = 0.029, SHOPIFY_FIX = 0.30;
+function f(n,d=0){return'€ '+n.toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d});}
+function fp(n){return(n*100).toFixed(1).replace('.',',')+' %';}
+function fi(n){return Math.round(n).toLocaleString('de-DE');}
+function fv(n,d=2){return n.toFixed(d).replace('.',',');}
+
+function calc(){
+  const prodUsd = parseFloat(document.getElementById('prod').value);
+  const lager   = parseFloat(document.getElementById('lager').value);
+  const tuete   = parseFloat(document.getElementById('tuete').value);
+  const retPct  = parseFloat(document.getElementById('ret').value)/100;
+  const vk      = parseFloat(document.getElementById('vk').value);
+  const mer     = parseFloat(document.getElementById('mer').value);
+  const ads     = parseFloat(document.getElementById('ads').value);
+  const opex    = parseFloat(document.getElementById('opex').value);
+  const moq     = parseInt(document.getElementById('moq').value);
+  const freight = parseFloat(document.getElementById('freight').value);
+  const ltvRate = parseFloat(document.getElementById('ltv').value)/100;
+  const ltvVk   = parseFloat(document.getElementById('ltv-vk').value);
+
+  document.getElementById('s-prod').textContent  = fv(prodUsd)+' $';
+  document.getElementById('s-lager').textContent = fv(lager)+' €';
+  document.getElementById('s-tuete').textContent = fv(tuete)+' €';
+  document.getElementById('s-ret').textContent   = Math.round(retPct*100)+' %';
+  document.getElementById('s-vk').textContent    = fv(vk)+' €';
+  document.getElementById('s-mer').textContent   = fv(mer,1)+'×';
+  document.getElementById('s-ads').textContent   = fi(ads)+' €';
+  document.getElementById('s-opex').textContent  = fi(opex)+' €';
+  document.getElementById('s-moq').textContent   = fi(moq);
+  document.getElementById('s-freight').textContent = fi(freight)+' €';
+  document.getElementById('s-ltv').textContent   = Math.round(ltvRate*100)+' %';
+  document.getElementById('s-ltv-vk').textContent= fv(ltvVk)+' €';
+
+  // Core per-unit calcs
+  const prodEur    = prodUsd * USD;
+  const vkNetto    = vk / (1+MWST);
+  const shopify    = vk * SHOPIFY_PCT + SHOPIFY_FIX;
+  const varCost    = prodEur + lager + tuete + shopify;
+  const grossPerUnit = vkNetto - varCost;
+  const grossMgn   = grossPerUnit / vkNetto;
+
+  // Monthly P&L
+  const bruttoMo   = ads * mer;
+  const mwstMo     = bruttoMo * MWST/(1+MWST);
+  const retMo      = bruttoMo * retPct;
+  const nettoMo    = bruttoMo - mwstMo - retMo;
+  const unitsMo    = nettoMo / vkNetto;
+  const cogsMo     = varCost * unitsMo;
+  const rohMo      = nettoMo - cogsMo;
+  const ebitMo     = rohMo - ads - opex;
+  const rohMgn     = rohMo / nettoMo;
+  const ebitMgn    = ebitMo / nettoMo;
+
+  // Break-even adspend (monthly)
+  const nettoRatio = (1 - MWST/(1+MWST) - retPct);
+  const coeff      = mer * nettoRatio * grossMgn - 1;
+  const beAds      = coeff > 0 ? opex/coeff : null;
+  const beUnits    = beAds ? (beAds*mer*nettoRatio)/vkNetto : null;
+  const ads5k      = coeff > 0 ? (opex+5000)/coeff : null;
+  const ads10k     = coeff > 0 ? (opex+10000)/coeff : null;
+
+  // Vorfinanzierung
+  const vfGesamt   = prodEur * moq + freight;
+  const vfAnz      = vfGesamt * 0.3;
+  const vfRest     = vfGesamt * 0.7;
+  const weeksToRoi = vfGesamt / (ebitMo > 0 ? ebitMo/4.33 : 1);
+
+  // LTV
+  const ltvBase    = vkNetto - varCost;
+  const ltvVkNetto = ltvVk / (1+MWST);
+  const ltvVkShop  = ltvVk * SHOPIFY_PCT + SHOPIFY_FIX;
+  const ltvVarCost2= prodEur + lager + tuete + ltvVkShop;
+  const ltvGross2  = ltvVkNetto - ltvVarCost2;
+  const ltvScenarios = [0,1,2,3].map(extra => {
+    const repeatRevenue = extra > 0 ? ltvRate * extra * ltvGross2 : 0;
+    return ltvBase + repeatRevenue;
+  });
+
+  // VERDICT
+  let vScore = 0;
+  if(grossMgn > 0.55) vScore++;
+  if(grossMgn > 0.65) vScore++;
+  if(ebitMo > 0) vScore++;
+  if(ebitMgn > 0.1) vScore++;
+  if(beAds && beAds < ads) vScore++;
+  if(weeksToRoi < 20) vScore++;
+  if(ltvScenarios[1] > ltvBase * 1.3) vScore++;
+
+  let vColor, vBg, vDot, vText, vSub;
+  if(vScore >= 5){
+    vColor='var(--green)'; vBg='var(--green-l)'; vDot='var(--green)';
+    vText='Das Produkt lohnt sich — starte den Launch.';
+    vSub='Rohmarge, EBIT und Kapitalrückfluss sehen solide aus. Hauptrisiko: MER-Stabilität.';
+  } else if(vScore >= 3){
+    vColor='var(--amber)'; vBg='var(--amber-l)'; vDot='#C4872A';
+    vText='Bedingt sinnvoll — mit Vorsicht starten.';
+    vSub='Die Zahlen funktionieren, aber einige Annahmen müssen stimmen. Stresse die Schieber.';
+  } else {
+    vColor='var(--red)'; vBg='var(--red-l)'; vDot='var(--red)';
+    vText='Aktuell nicht profitabel — Annahmen überarbeiten.';
+    vSub='Zu hohe Kosten oder zu niedriger MER. Preis erhöhen oder Kosten senken.';
+  }
+
+  document.getElementById('verdict').style.background = vBg;
+  document.getElementById('verdict').innerHTML = `
+    <div class="verdict-dot" style="background:${vDot}"></div>
+    <div>
+      <div class="verdict-text" style="color:${vColor}">${vText}</div>
+      <div class="verdict-sub" style="color:${vColor}">${vSub}</div>
+    </div>
+  `;
+
+  // KPIs
+  const ebitC = ebitMo>0?'c-green':'c-red';
+  const rohC  = rohMgn>0.55?'c-green':rohMgn>0.4?'c-amber':'c-red';
+  document.getElementById('kpis').innerHTML = `
+    <div class="metric"><div class="mval c-terra">${f(bruttoMo)}</div><div class="mlabel">Bruttoumsatz/Monat</div><div class="msub c-gray">bei ${fv(mer,1)}× MER</div></div>
+    <div class="metric"><div class="mval ${rohC}">${fp(rohMgn)}</div><div class="mlabel">Rohmarge</div><div class="msub ${rohC}">${f(rohMo)} absolut</div></div>
+    <div class="metric"><div class="mval ${ebitC}">${f(ebitMo)}</div><div class="mlabel">EBIT / Monat</div><div class="msub ${ebitC}">${fp(ebitMgn)} Marge</div></div>
+    <div class="metric"><div class="mval c-terra">${f(vfGesamt)}</div><div class="mlabel">Vorfinanzierung</div><div class="msub c-gray">${fi(moq)} Stück MOQ</div></div>
+  `;
+
+  // BREAK-EVEN
+  const beHtml = beAds ? `
+    <div class="drow"><span class="dlabel">Break-even Adspend/Monat</span><span class="c-terra" style="font-weight:500">${f(beAds)}</span></div>
+    <div class="drow"><span class="dlabel">Break-even Einheiten/Monat</span><span style="font-weight:500">${fi(beUnits)}</span></div>
+    <div class="drow"><span class="dlabel">Aktueller Adspend</span><span style="font-weight:500">${f(ads)}</span></div>
+    <div class="drow"><span class="dlabel">Puffer über Break-even</span><span class="${ads>beAds?'c-green':'c-red'}" style="font-weight:500">${f(ads-beAds)}</span></div>
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--light)">
+      <div class="drow"><span class="dlabel">Adspend für € 5k EBIT</span><span style="font-weight:500">${f(ads5k)}</span></div>
+      <div class="drow"><span class="dlabel">Adspend für € 10k EBIT</span><span style="font-weight:500">${f(ads10k)}</span></div>
+    </div>
+  ` : `<p style="color:var(--red);font-size:13px">Break-even nicht erreichbar bei aktuellem MER. MER erhöhen oder OpEx senken.</p>`;
+  document.getElementById('be-content').innerHTML = beHtml;
+
+  // COST BARS
+  const bars = [
+    {label:'COGS', pct:cogsMo/nettoMo, color:'bg-terra'},
+    {label:'Adspend', pct:ads/nettoMo, color:'bg-amber'},
+    {label:'OpEx', pct:opex/nettoMo, color:'bg-blue'},
+    {label:'EBIT', pct:Math.max(ebitMgn,0), color:'bg-green'},
+  ];
+  document.getElementById('cost-bars').innerHTML = bars.map(b=>`
+    <div class="bar-header" style="margin-top:8px"><span style="font-size:12px;color:var(--gray);font-weight:300">${b.label}</span><span style="font-size:12px;font-weight:500">${fp(b.pct)}</span></div>
+    <div class="bar-wrap"><div class="bar-fill ${b.color}" style="width:${Math.min(b.pct*100,100)}%"></div></div>
+  `).join('');
+
+  // CASHFLOW TIMELINE
+  const wk1 = Math.round(ebitMo > 0 ? vfGesamt/(ebitMo/4.33) : 999);
+  document.getElementById('cf-content').innerHTML = `
+    <div class="cf-timeline">
+      <div class="cf-phase" style="background:var(--red-l)">
+        <div class="cf-phase-label" style="color:var(--red)">−${f(vfAnz)}</div>
+        <div class="cf-phase-sub">Anzahlung (30%)<br>Heute</div>
+      </div>
+      <div class="cf-arrow">→</div>
+      <div class="cf-phase" style="background:var(--red-l)">
+        <div class="cf-phase-label" style="color:var(--red)">−${f(vfRest)}</div>
+        <div class="cf-phase-sub">Restbetrag (70%)<br>Woche 4–6</div>
+      </div>
+      <div class="cf-arrow">→</div>
+      <div class="cf-phase" style="background:var(--amber-l)">
+        <div class="cf-phase-label" style="color:var(--amber)">−${f(vfGesamt)}</div>
+        <div class="cf-phase-sub">Max. Exposure<br>Woche 10–12</div>
+      </div>
+      <div class="cf-arrow">→</div>
+      <div class="cf-phase" style="background:var(--green-l)">
+        <div class="cf-phase-label" style="color:var(--green)">${f(ebitMo,0)}/Mo.</div>
+        <div class="cf-phase-sub">EBIT läuft<br>ab Woche ~14</div>
+      </div>
+      <div class="cf-arrow">→</div>
+      <div class="cf-phase" style="background:${ebitMo>0?'var(--green-l)':'var(--red-l)'}">
+        <div class="cf-phase-label" style="color:${ebitMo>0?'var(--green)':'var(--red)'}">Wo. ${ebitMo>0?wk1:'∞'}</div>
+        <div class="cf-phase-sub">Vorfinanzierung<br>zurückverdient</div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--gray);font-weight:300">
+      Gesamte Kapitalbindung: ${f(vfGesamt)} · Rückfluss bei aktuellem EBIT: ${ebitMo>0?'ca. '+wk1+' Wochen ab Verkaufsstart':'nicht profitabel'}
+    </div>
+  `;
+
+  // LTV TABLE
+  const ltvLabels = ['0× Wiederkauf\n(Einmalkauf)', '1× Wiederkauf', '2× Wiederkäufe', '3× Wiederkäufe'];
+  const adsCacPerUnit = ads / unitsMo;
+  document.getElementById('ltv-content').innerHTML = `
+    <div class="ltv-grid">
+      <div class="ltv-cell ltv-head">Szenario</div>
+      ${ltvLabels.map(l=>`<div class="ltv-cell ltv-head">${l.replace('\n','<br>')}</div>`).join('')}
+      <div class="ltv-cell ltv-label">Brutto-LTV</div>
+      ${ltvScenarios.map((v,i)=>`<div class="ltv-cell" style="font-weight:500">${f(v,2)}</div>`).join('')}
+      <div class="ltv-cell ltv-label">LTV nach CAC (${f(adsCacPerUnit,2)})</div>
+      ${ltvScenarios.map(v=>{const net=v-adsCacPerUnit; return`<div class="ltv-cell" style="font-weight:500;color:${net>0?'var(--green)':'var(--red)'}">${f(net,2)}</div>`}).join('')}
+      <div class="ltv-cell ltv-label">LTV-Uplift vs. Einmalkauf</div>
+      ${ltvScenarios.map((v,i)=>{const upPct=(v-ltvScenarios[0])/ltvScenarios[0]; return`<div class="ltv-cell" style="color:${i===0?'var(--gray)':'var(--green)';font-weight:${i>0?'500':'400'}}">${i===0?'—':'+'+fp(upPct)}</div>`}).join('')}
+      <div class="ltv-cell ltv-label">Break-even Monate</div>
+      ${ltvScenarios.map((v,i)=>{const be=vfGesamt/(v*unitsMo>0?v*unitsMo:1); return`<div class="ltv-cell" style="font-weight:500;color:${be<6?'var(--green)':be<12?'var(--amber)':'var(--red)'}">${be<100?fv(be,1)+' Mo.':'> 24 Mo.'}</div>`}).join('')}
+    </div>
+    <p style="font-size:11px;color:var(--gray);font-weight:300;margin-top:8px">Wiederkauf-VK: ${fv(ltvVk)} € · Wiederkaufsrate: ${Math.round(ltvRate*100)} % der Erstkäuferinnen innerhalb 12 Monate</p>
+  `;
+
+  // P&L
+  document.getElementById('pnl-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;font-size:12px">
+      <div style="color:var(--gray);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em">Position</div>
+      <div style="color:var(--gray);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;text-align:right">% Umsatz</div>
+      <div style="color:var(--gray);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;text-align:right;min-width:90px">Betrag</div>
+    </div>
+    ${[
+      ['Bruttoumsatz',             '', f(bruttoMo),          '', ''],
+      ['− MwSt. 19 %',            fp(mwstMo/bruttoMo), '− '+f(mwstMo), 'dlabel', 'c-red'],
+      ['− Retouren',               fp(retPct), '− '+f(retMo), 'dlabel', 'c-red'],
+      ['= Nettoumsatz',            fp(1), f(nettoMo), '', ''],
+      ['− COGS gesamt',            fp(cogsMo/nettoMo), '− '+f(cogsMo), 'dlabel', 'c-red'],
+      ['= Rohertrag',              fp(rohMgn), f(rohMo), '', rohMgn>0.5?'c-green':'c-amber'],
+      ['− Adspend',                fp(ads/nettoMo), '− '+f(ads), 'dlabel', 'c-red'],
+      ['− Fixe OpEx',              fp(opex/nettoMo), '− '+f(opex), 'dlabel', 'c-red'],
+      ['EBIT',                     fp(ebitMgn), f(ebitMo), 'font-weight:500', ebitMo>=0?'c-green':'c-red'],
+    ].map(([l,p,v,lc,vc])=>`
+      <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;padding:7px 0;border-bottom:1px solid var(--light);font-size:13px;align-items:center">
+        <span class="${lc||''}" style="${lc?.includes(':')?lc:''}">${l}</span>
+        <span style="text-align:right;font-size:11px;color:var(--gray)">${p}</span>
+        <span style="text-align:right;min-width:90px;font-weight:500" class="${vc||''}">${v}</span>
+      </div>
+    `).join('')}
+    <p style="font-size:11px;color:var(--gray);font-weight:300;margin-top:10px">${fi(unitsMo)} verkaufte Einheiten/Monat · ${f(varCost,2)}/Stück variable Kosten · ${fv(vk)} € VK brutto</p>
+  `;
+}
+
+['prod','lager','tuete','ret','vk','mer','ads','opex','moq','freight','ltv','ltv-vk']
+  .forEach(id => document.getElementById(id).addEventListener('input', calc));
+calc();
+</script>
+</body>
+</html>
