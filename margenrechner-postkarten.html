@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Margenrechner — habitus Ausmalpostkarten</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F7F5F0; color: #1a1a1a; padding: 2rem 1rem; }
+  .container { max-width: 580px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  .sub { font-size: 13px; color: #888; margin-bottom: 1.5rem; }
+  .block { background: #fff; border: 1px solid #e8e4de; border-radius: 12px; padding: 1.25rem; margin-bottom: 12px; }
+  .block-title { font-size: 11px; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+  .slider-row { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
+  .slider-row label { font-size: 13px; color: #666; min-width: 175px; }
+  .slider-row input[type=range] { flex: 1; accent-color: #C4632A; }
+  .slider-row span { font-size: 13px; font-weight: 600; min-width: 52px; text-align: right; color: #1a1a1a; }
+  .metrics { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .metric { background: #fff; border: 1px solid #e8e4de; border-radius: 10px; padding: 1rem; text-align: center; }
+  .metric-val { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .metric-label { font-size: 11px; color: #999; line-height: 1.4; }
+  .row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #f0ece6; font-size: 14px; }
+  .row:last-child { border-bottom: none; }
+  .row .label { color: #666; }
+  .total-row { display: flex; justify-content: space-between; padding: 10px 0 0; margin-top: 8px; border-top: 1.5px solid #e0dbd4; font-size: 15px; font-weight: 600; }
+  .note { font-size: 12px; color: #999; background: #f7f5f0; border-radius: 8px; padding: 10px 12px; line-height: 1.6; }
+  hr.div { border: none; border-top: 1px solid #f0ece6; margin: 6px 0; }
+  .green { color: #1a7a54; }
+  .orange { color: #b86a10; }
+  .red { color: #c0392b; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Margenrechner</h1>
+  <p class="sub">habitus Ausmalpostkarten · VK 49,99 €</p>
+
+  <div class="block">
+    <p class="block-title">Regler</p>
+    <div class="slider-row">
+      <label>Lagerkosten / Stück (€)</label>
+      <input type="range" min="0" max="3" step="0.1" value="0.5" id="lager">
+      <span id="lager-out">0,50 €</span>
+    </div>
+    <div class="slider-row">
+      <label>Fulfillment / Stück (€)</label>
+      <input type="range" min="0.5" max="4" step="0.1" value="1.5" id="fulfillment">
+      <span id="ff-out">1,50 €</span>
+    </div>
+    <div class="slider-row">
+      <label>Versandtüte (€)</label>
+      <input type="range" min="0.1" max="1.5" step="0.05" value="0.4" id="tuete">
+      <span id="tuete-out">0,40 €</span>
+    </div>
+    <div class="slider-row">
+      <label>CAC / Marketingkosten (€)</label>
+      <input type="range" min="0" max="60" step="1" value="28" id="cac">
+      <span id="cac-out">28,00 €</span>
+    </div>
+  </div>
+
+  <div class="metrics" id="metrics"></div>
+  <div class="block" id="breakdown"></div>
+  <div class="note" id="note"></div>
+</div>
+
+<script>
+const VERKAUF = 49.99;
+const PRODUKTION_USD = 7.86;
+const VERSAND_CHINA = 1.00;
+const USD_EUR = 0.8482;
+const SHOPIFY_PCT = 0.029;
+const SHOPIFY_FIX = 0.30;
+const MWST = 0.19;
+
+function fmt(n) { return n.toFixed(2).replace('.', ',') + ' €'; }
+function pct(n) { return (n * 100).toFixed(1).replace('.', ',') + ' %'; }
+function colorClass(n, hi, mid) { return n >= hi ? 'green' : n >= mid ? 'orange' : 'red'; }
+
+function calc() {
+  const lager = parseFloat(document.getElementById('lager').value);
+  const ff = parseFloat(document.getElementById('fulfillment').value);
+  const tuete = parseFloat(document.getElementById('tuete').value);
+  const cac = parseFloat(document.getElementById('cac').value);
+
+  document.getElementById('lager-out').textContent = fmt(lager);
+  document.getElementById('ff-out').textContent = fmt(ff);
+  document.getElementById('tuete-out').textContent = fmt(tuete);
+  document.getElementById('cac-out').textContent = fmt(cac);
+
+  const mwstBetrag = VERKAUF * MWST / (1 + MWST);
+  const netto = VERKAUF - mwstBetrag;
+  const produktion = PRODUKTION_USD * USD_EUR;
+  const shopify = VERKAUF * SHOPIFY_PCT + SHOPIFY_FIX;
+  const kostenOhneCAC = produktion + VERSAND_CHINA + lager + ff + tuete + shopify;
+  const rohmarge = netto - kostenOhneCAC;
+  const rohmargenPct = rohmarge / netto;
+  const nettoMarge = netto - kostenOhneCAC - cac;
+  const nettoMargenPct = nettoMarge / netto;
+
+  document.getElementById('metrics').innerHTML = `
+    <div class="metric">
+      <div class="metric-val ${colorClass(rohmargenPct, 0.6, 0.4)}">${pct(rohmargenPct)}</div>
+      <div class="metric-label">Rohmarge<br>(ohne CAC)</div>
+    </div>
+    <div class="metric">
+      <div class="metric-val ${colorClass(nettoMargenPct, 0.3, 0.1)}">${pct(nettoMargenPct)}</div>
+      <div class="metric-label">Nettomarge<br>(nach CAC)</div>
+    </div>
+    <div class="metric">
+      <div class="metric-val ${colorClass(nettoMarge, 5, 0)}">${fmt(nettoMarge)}</div>
+      <div class="metric-label">Gewinn<br>pro Stück</div>
+    </div>
+  `;
+
+  document.getElementById('breakdown').innerHTML = `
+    <p class="block-title">Aufschlüsselung</p>
+    <div class="row"><span class="label">Verkaufspreis (brutto)</span><span style="font-weight:600">${fmt(VERKAUF)}</span></div>
+    <div class="row"><span class="label">− MwSt. 19 %</span><span class="red">− ${fmt(mwstBetrag)}</span></div>
+    <div class="row" style="font-weight:600"><span class="label" style="color:#1a1a1a">= Nettoumsatz</span><span>${fmt(netto)}</span></div>
+    <hr class="div">
+    <div class="row"><span class="label">Produktion (${PRODUKTION_USD} $ × 0,8482)</span><span class="red">− ${fmt(produktion)}</span></div>
+    <div class="row"><span class="label">Versand China → Berlin</span><span class="red">− ${fmt(VERSAND_CHINA)}</span></div>
+    <div class="row"><span class="label">Lagerkosten</span><span class="red">− ${fmt(lager)}</span></div>
+    <div class="row"><span class="label">Fulfillment</span><span class="red">− ${fmt(ff)}</span></div>
+    <div class="row"><span class="label">Versandtüte</span><span class="red">− ${fmt(tuete)}</span></div>
+    <div class="row"><span class="label">Shopify / Zahlung (2,9 % + 0,30 €)</span><span class="red">− ${fmt(shopify)}</span></div>
+    <div class="total-row"><span>Rohmarge (ohne CAC)</span><span class="${colorClass(rohmargenPct,0.6,0.4)}">${fmt(rohmarge)} (${pct(rohmargenPct)})</span></div>
+    <hr class="div" style="margin-top:10px">
+    <div class="row" style="margin-top:4px"><span class="label">CAC / Marketing</span><span class="red">− ${fmt(cac)}</span></div>
+    <div class="total-row" style="font-size:16px"><span>Gewinn pro Stück</span><span class="${colorClass(nettoMarge,5,0)}">${fmt(nettoMarge)} (${pct(nettoMargenPct)})</span></div>
+  `;
+
+  document.getElementById('note').innerHTML =
+    `Wechselkurs: 1 $ = 0,8482 € &nbsp;·&nbsp; Steffi-Bauer-Provision bereits abbezahlt &nbsp;·&nbsp; Kundenversand (4,99 €) nicht enthalten`;
+}
+
+['lager','fulfillment','tuete','cac'].forEach(id => document.getElementById(id).addEventListener('input', calc));
+calc();
+</script>
+</body>
+</html>
