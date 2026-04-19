@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>habitus — P&L Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream: #F7F3EE;
+  --brown: #2C1810;
+  --terra: #C4632A;
+  --terra-l: #F0DDD1;
+  --terra-m: #E09068;
+  --gray: #8A7E76;
+  --light: #EDE8E2;
+  --white: #FDFAF7;
+  --green: #1E6644;
+  --green-l: #D6EDE1;
+  --red: #8C2A1C;
+  --red-l: #F5DDD9;
+  --amber: #7A4F0A;
+  --amber-l: #FBE8C8;
+  --border: #E2DCD5;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--brown); min-height: 100vh; }
+
+/* HEADER */
+header { background: var(--white); border-bottom: 1px solid var(--border); padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+.logo { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--terra); }
+.period-switch { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.period-btn { padding: 6px 14px; font-size: 12px; font-family: 'DM Sans', sans-serif; background: none; border: none; cursor: pointer; color: var(--gray); font-weight: 400; transition: all 0.15s; }
+.period-btn.active { background: var(--terra); color: white; font-weight: 500; }
+
+/* LAYOUT */
+.layout { display: grid; grid-template-columns: 320px 1fr; min-height: calc(100vh - 65px); }
+
+/* LEFT PANEL */
+.left { background: var(--white); border-right: 1px solid var(--border); padding: 1.5rem; overflow-y: auto; }
+.panel-title { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray); margin-bottom: 1rem; }
+
+.slider-group { margin-bottom: 1.5rem; }
+.slider-group + .slider-group { padding-top: 1.25rem; border-top: 1px solid var(--light); }
+.s-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.s-label { font-size: 13px; color: var(--brown); font-weight: 400; }
+.s-val { font-size: 15px; font-weight: 500; color: var(--terra); }
+.s-sub { font-size: 11px; color: var(--gray); font-weight: 300; margin-bottom: 8px; }
+input[type=range] { width: 100%; -webkit-appearance: none; height: 3px; background: var(--light); border-radius: 2px; outline: none; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--terra); cursor: pointer; border: 3px solid var(--white); box-shadow: 0 0 0 1.5px var(--terra); }
+.s-range { display: flex; justify-content: space-between; font-size: 10px; color: var(--gray); margin-top: 4px; }
+
+.sep-label { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--terra); margin: 1.5rem 0 1rem; padding-top: 1.25rem; border-top: 1px solid var(--terra-l); }
+
+/* TARGET BOX */
+.target-box { background: var(--cream); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; margin-top: 1.5rem; }
+.target-title { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray); margin-bottom: 10px; }
+.target-row { display: flex; justify-content: space-between; align-items: center; margin: 6px 0; font-size: 12px; }
+.target-row span:first-child { color: var(--gray); font-weight: 300; }
+.target-row span:last-child { font-weight: 500; }
+
+/* RIGHT PANEL */
+.right { padding: 1.5rem 2rem; overflow-y: auto; }
+.right-title { font-family: 'DM Serif Display', serif; font-size: 20px; margin-bottom: 1.5rem; color: var(--brown); }
+
+/* KPI ROW */
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+.kpi { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem 1rem; }
+.kpi-val { font-family: 'DM Serif Display', serif; font-size: 28px; line-height: 1; margin-bottom: 6px; }
+.kpi-label { font-size: 11px; color: var(--gray); font-weight: 300; line-height: 1.4; }
+.kpi-delta { font-size: 11px; font-weight: 500; margin-top: 6px; }
+
+/* P&L TABLE */
+.pnl { background: var(--white); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; }
+.pnl-row { display: grid; grid-template-columns: 1fr auto auto; gap: 1rem; padding: 11px 1.25rem; border-bottom: 1px solid var(--light); font-size: 13px; align-items: center; }
+.pnl-row:last-child { border-bottom: none; }
+.pnl-row.header { background: var(--cream); font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray); padding: 8px 1.25rem; }
+.pnl-row.section { background: var(--cream); font-weight: 500; font-size: 12px; color: var(--gray); letter-spacing: 0.05em; }
+.pnl-row.total { background: var(--brown); color: white; font-weight: 500; font-size: 14px; }
+.pnl-row.total .pnl-label { color: rgba(255,255,255,0.9); }
+.pnl-row.subtotal { border-top: 1.5px solid var(--border); background: var(--cream); font-weight: 500; }
+.pnl-label { color: var(--gray); font-weight: 300; }
+.pnl-label.main { color: var(--brown); font-weight: 400; }
+.pnl-pct { font-size: 11px; color: var(--gray); text-align: right; min-width: 44px; }
+.pnl-amt { font-weight: 500; text-align: right; min-width: 90px; }
+
+/* SCENARIO BARS */
+.scenarios { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+.scenario-title { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray); margin-bottom: 1rem; }
+.bar-row { margin-bottom: 14px; }
+.bar-header { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
+.bar-header span:first-child { color: var(--gray); font-weight: 300; }
+.bar-track { background: var(--light); border-radius: 3px; height: 8px; overflow: hidden; }
+.bar-fill { height: 8px; border-radius: 3px; transition: width 0.3s ease; }
+
+/* COLORS */
+.c-green { color: var(--green); }
+.c-red { color: var(--red); }
+.c-amber { color: var(--amber); }
+.c-terra { color: var(--terra); }
+.c-gray { color: var(--gray); }
+.bg-green { background: var(--green); }
+.bg-terra { background: var(--terra); }
+.bg-amber { background: #C4872A; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">habitus P&L Planner</div>
+  <div style="display:flex;align-items:center;gap:1rem">
+    <span style="font-size:12px;color:var(--gray)">Zeitraum:</span>
+    <div class="period-switch">
+      <button class="period-btn" onclick="setPeriod('tag',this)">Tag</button>
+      <button class="period-btn active" onclick="setPeriod('woche',this)">Woche</button>
+      <button class="period-btn" onclick="setPeriod('monat',this)">Monat</button>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- LEFT: INPUTS -->
+  <div class="left">
+    <p class="panel-title">Parameter</p>
+
+    <div class="slider-group">
+      <div class="s-header"><span class="s-label">Adspend</span><span class="s-val" id="adspend-val">€ 1.400</span></div>
+      <div class="s-sub" id="adspend-sub">pro Woche</div>
+      <input type="range" min="100" max="50000" step="100" value="1400" id="adspend">
+      <div class="s-range"><span id="adspend-min">€ 100</span><span id="adspend-max">€ 50.000</span></div>
+    </div>
+
+    <div class="slider-group">
+      <div class="s-header"><span class="s-label">MER</span><span class="s-val" id="mer-val">3.8×</span></div>
+      <div class="s-sub">Media Efficiency Ratio (Umsatz ÷ Adspend)</div>
+      <input type="range" min="0.5" max="12" step="0.1" value="3.8" id="mer">
+      <div class="s-range"><span>0.5×</span><span>12×</span></div>
+    </div>
+
+    <p class="sep-label">Produktkosten (COGS)</p>
+
+    <div class="slider-group">
+      <div class="s-header"><span class="s-label">Produktionskosten</span><span class="s-val" id="prod-val">7.86 $</span></div>
+      <input type="range" min="2" max="20" step="0.1" value="7.86" id="prod">
+      <div class="s-range"><span>2 $</span><span>20 $</span></div>
+    </div>
+
+    <div class="slider-group">
+      <div class="s-header"><span class="s-label">Lager + Fulfillment</span><span class="s-val" id="lager-val">€ 2.00</span></div>
+      <div class="s-sub">pro Stück</div>
+      <input type="range" min="0" max="6" step="0.1" value="2.0" id="lager">
+      <div class="s-range"><span>€ 0</span><span>€ 6</span></div>
+    </div>
+
+    <div class="slider-group">
+      <div class="s-header"><span class="s-label">Versandtüte</span><span class="s-val" id="tuete-val">€ 0.40</span></div>
+      <div class="s-sub">pro Stück</div>
+      <input type="range" min="0.1" max="2" step="0.05" value="0.40" id="tuete">
+      <div class="s-range"><span>€ 0.10</span><span>€ 2</span></div>
+    </div>
+
+    <p class="sep-label">Fixkosten (OpEx)</p>
+
+    <div class="slider-group">
+      <div class="s-header"><span class="s-label">Fixe OpEx</span><span class="s-val" id="opex-val">€ 2.100</span></div>
+      <div class="s-sub" id="opex-sub">pro Woche (Team, Tools, Sonstiges)</div>
+      <input type="range" min="100" max="30000" step="100" value="2100" id="opex">
+      <div class="s-range"><span>€ 100</span><span>€ 30.000</span></div>
+    </div>
+
+    <p class="sep-label">Preise</p>
+
+    <div class="slider-group">
+      <div class="s-header"><span class="s-label">Verkaufspreis brutto</span><span class="s-val" id="vk-val">€ 49.99</span></div>
+      <input type="range" min="19" max="99" step="1" value="49.99" id="vk">
+      <div class="s-range"><span>€ 19</span><span>€ 99</span></div>
+    </div>
+
+    <div class="slider-group">
+      <div class="s-header"><span class="s-label">Retourenquote</span><span class="s-val" id="retoure-val">3 %</span></div>
+      <input type="range" min="0" max="20" step="1" value="3" id="retoure">
+      <div class="s-range"><span>0 %</span><span>20 %</span></div>
+    </div>
+
+    <!-- TARGET BOX -->
+    <div class="target-box">
+      <p class="target-title">Ziel-Szenario</p>
+      <div class="target-row">
+        <span>Adspend für Breakeven</span>
+        <span id="t-be-adspend" class="c-terra">—</span>
+      </div>
+      <div class="target-row">
+        <span>Adspend für € 5k Profit</span>
+        <span id="t-5k" class="c-terra">—</span>
+      </div>
+      <div class="target-row">
+        <span>Adspend für € 10k Profit</span>
+        <span id="t-10k" class="c-terra">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: P&L -->
+  <div class="right">
+    <div class="right-title" id="period-title">Wöchentliche P&L</div>
+
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-val c-terra" id="kpi-umsatz">—</div>
+        <div class="kpi-label">Bruttoumsatz</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-val" id="kpi-rohertrag">—</div>
+        <div class="kpi-label">Rohertrag nach COGS</div>
+        <div class="kpi-delta" id="kpi-rohertrag-pct">—</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-val" id="kpi-ebit">—</div>
+        <div class="kpi-label">EBIT (nach Ads + OpEx)</div>
+        <div class="kpi-delta" id="kpi-ebit-pct">—</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-val" id="kpi-units">—</div>
+        <div class="kpi-label">Verkaufte Einheiten</div>
+        <div class="kpi-delta" id="kpi-units-sub">—</div>
+      </div>
+    </div>
+
+    <!-- P&L TABLE -->
+    <div class="pnl">
+      <div class="pnl-row header">
+        <span>Position</span>
+        <span style="text-align:right">% Umsatz</span>
+        <span style="text-align:right">Betrag</span>
+      </div>
+      <div class="pnl-row">
+        <span class="pnl-label main">Bruttoumsatz</span>
+        <span class="pnl-pct">100 %</span>
+        <span class="pnl-amt c-terra" id="p-umsatz">—</span>
+      </div>
+      <div class="pnl-row">
+        <span class="pnl-label">− MwSt. 19 %</span>
+        <span class="pnl-pct" id="p-mwst-pct">—</span>
+        <span class="pnl-amt c-red" id="p-mwst">—</span>
+      </div>
+      <div class="pnl-row">
+        <span class="pnl-label">− Retouren (<span id="p-retoure-pct-label">3</span> %)</span>
+        <span class="pnl-pct" id="p-retoure-pct">—</span>
+        <span class="pnl-amt c-red" id="p-retoure">—</span>
+      </div>
+      <div class="pnl-row subtotal">
+        <span class="pnl-label main">= Nettoumsatz</span>
+        <span class="pnl-pct" id="p-netto-pct">—</span>
+        <span class="pnl-amt" id="p-netto">—</span>
+      </div>
+
+      <div class="pnl-row section"><span>COGS</span><span></span><span></span></div>
+      <div class="pnl-row">
+        <span class="pnl-label">− Produktion ($ × 0,8482 × Stück)</span>
+        <span class="pnl-pct" id="p-prod-pct">—</span>
+        <span class="pnl-amt c-red" id="p-prod">—</span>
+      </div>
+      <div class="pnl-row">
+        <span class="pnl-label">− Lager + Fulfillment</span>
+        <span class="pnl-pct" id="p-lager-pct">—</span>
+        <span class="pnl-amt c-red" id="p-lager">—</span>
+      </div>
+      <div class="pnl-row">
+        <span class="pnl-label">− Versandtüte</span>
+        <span class="pnl-pct" id="p-tuete-pct">—</span>
+        <span class="pnl-amt c-red" id="p-tuete">—</span>
+      </div>
+      <div class="pnl-row">
+        <span class="pnl-label">− Shopify / Zahlung (2,9 % + 0,30 €/Stk.)</span>
+        <span class="pnl-pct" id="p-shopify-pct">—</span>
+        <span class="pnl-amt c-red" id="p-shopify">—</span>
+      </div>
+      <div class="pnl-row subtotal">
+        <span class="pnl-label main">= Rohertrag (Gross Profit)</span>
+        <span class="pnl-pct" id="p-roh-pct">—</span>
+        <span class="pnl-amt" id="p-roh">—</span>
+      </div>
+
+      <div class="pnl-row section"><span>Marketing & OpEx</span><span></span><span></span></div>
+      <div class="pnl-row">
+        <span class="pnl-label">− Adspend (MER <span id="p-mer-label">3.8</span>×)</span>
+        <span class="pnl-pct" id="p-ads-pct">—</span>
+        <span class="pnl-amt c-red" id="p-ads">—</span>
+      </div>
+      <div class="pnl-row">
+        <span class="pnl-label">− Fixe OpEx</span>
+        <span class="pnl-pct" id="p-opex-pct">—</span>
+        <span class="pnl-amt c-red" id="p-opex">—</span>
+      </div>
+      <div class="pnl-row total">
+        <span class="pnl-label">EBIT</span>
+        <span class="pnl-pct" id="p-ebit-pct" style="color:rgba(255,255,255,0.7)">—</span>
+        <span class="pnl-amt" id="p-ebit">—</span>
+      </div>
+    </div>
+
+    <!-- SCENARIO BARS -->
+    <div class="scenarios">
+      <p class="scenario-title">Umsatzstruktur</p>
+      <div class="bar-row">
+        <div class="bar-header"><span>COGS (% Nettoumsatz)</span><span id="bar-cogs-val" style="font-weight:500">—</span></div>
+        <div class="bar-track"><div class="bar-fill bg-terra" id="bar-cogs" style="width:0%"></div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-header"><span>Adspend (% Nettoumsatz)</span><span id="bar-ads-val" style="font-weight:500">—</span></div>
+        <div class="bar-track"><div class="bar-fill bg-amber" id="bar-ads" style="width:0%"></div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-header"><span>OpEx (% Nettoumsatz)</span><span id="bar-opex-val" style="font-weight:500">—</span></div>
+        <div class="bar-track"><div class="bar-fill" id="bar-opex" style="width:0%;background:var(--gray)"></div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-header"><span>EBIT-Marge</span><span id="bar-ebit-val" style="font-weight:500">—</span></div>
+        <div class="bar-track"><div class="bar-fill bg-green" id="bar-ebit" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const USD_EUR = 0.8482;
+const MWST = 0.19;
+let period = 'woche';
+const periodMult = { tag: 1, woche: 7, monat: 30 };
+const periodLabel = { tag: 'Tägliche P&L', woche: 'Wöchentliche P&L', monat: 'Monatliche P&L' };
+const periodSub = { tag: 'pro Tag', woche: 'pro Woche', monat: 'pro Monat' };
+
+function fmt(n, decimals=0) {
+  if (Math.abs(n) >= 1000) return '€ ' + n.toLocaleString('de-DE', {minimumFractionDigits: decimals, maximumFractionDigits: decimals});
+  return '€ ' + n.toFixed(decimals).replace('.', ',');
+}
+function pct(n) { return (n*100).toFixed(1).replace('.',',') + ' %'; }
+function fmtI(n) { return Math.round(n).toLocaleString('de-DE'); }
+
+function setPeriod(p, btn) {
+  period = p;
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('period-title').textContent = periodLabel[p];
+  document.getElementById('adspend-sub').textContent = periodSub[p];
+  document.getElementById('opex-sub').textContent = periodSub[p] + ' (Team, Tools, Sonstiges)';
+  calc();
+}
+
+function calc() {
+  const days    = periodMult[period];
+  const adspend = parseFloat(document.getElementById('adspend').value);
+  const mer     = parseFloat(document.getElementById('mer').value);
+  const prodUsd = parseFloat(document.getElementById('prod').value);
+  const lager   = parseFloat(document.getElementById('lager').value);
+  const tuete   = parseFloat(document.getElementById('tuete').value);
+  const opex    = parseFloat(document.getElementById('opex').value);
+  const vkBrutto= parseFloat(document.getElementById('vk').value);
+  const retPct  = parseFloat(document.getElementById('retoure').value) / 100;
+
+  // UI updates
+  document.getElementById('adspend-val').textContent = fmt(adspend);
+  document.getElementById('mer-val').textContent = mer.toFixed(1).replace('.',',') + '×';
+  document.getElementById('prod-val').textContent = prodUsd.toFixed(2).replace('.',',') + ' $';
+  document.getElementById('lager-val').textContent = '€ ' + lager.toFixed(2).replace('.',',');
+  document.getElementById('tuete-val').textContent = '€ ' + tuete.toFixed(2).replace('.',',');
+  document.getElementById('opex-val').textContent = fmt(opex);
+  document.getElementById('vk-val').textContent = '€ ' + vkBrutto.toFixed(2).replace('.',',');
+  document.getElementById('retoure-val').textContent = Math.round(retPct*100) + ' %';
+  document.getElementById('p-mer-label').textContent = mer.toFixed(1).replace('.',',');
+  document.getElementById('p-retoure-pct-label').textContent = Math.round(retPct*100);
+
+  // CALCS
+  const bruttoUmsatz = adspend * mer;
+  const mwstBetrag   = bruttoUmsatz * MWST / (1 + MWST);
+  const retourBetrag = bruttoUmsatz * retPct;
+  const nettoUmsatz  = bruttoUmsatz - mwstBetrag - retourBetrag;
+
+  const vkNetto   = vkBrutto / (1 + MWST);
+  const units     = nettoUmsatz / vkNetto;
+  const prodEur   = prodUsd * USD_EUR;
+  const shopifyPerUnit = vkBrutto * 0.029 + 0.30;
+
+  const cogsTotal   = (prodEur + lager + tuete + shopifyPerUnit) * units;
+  const rohertrag   = nettoUmsatz - cogsTotal;
+
+  const ebit = rohertrag - adspend - opex;
+
+  // % of netto
+  const cogsPct   = cogsTotal / nettoUmsatz;
+  const adsPct    = adspend / nettoUmsatz;
+  const opexPct   = opex / nettoUmsatz;
+  const rohPct    = rohertrag / nettoUmsatz;
+  const ebitPct   = ebit / nettoUmsatz;
+
+  // KPIs
+  document.getElementById('kpi-umsatz').textContent = fmt(bruttoUmsatz);
+  const rohColor = rohPct > 0.5 ? 'c-green' : rohPct > 0.3 ? 'c-amber' : 'c-red';
+  const ebitColor = ebit > 0 ? 'c-green' : 'c-red';
+  document.getElementById('kpi-rohertrag').className = 'kpi-val ' + rohColor;
+  document.getElementById('kpi-rohertrag').textContent = fmt(rohertrag);
+  document.getElementById('kpi-rohertrag-pct').className = 'kpi-delta ' + rohColor;
+  document.getElementById('kpi-rohertrag-pct').textContent = pct(rohPct) + ' Marge';
+  document.getElementById('kpi-ebit').className = 'kpi-val ' + ebitColor;
+  document.getElementById('kpi-ebit').textContent = fmt(ebit);
+  document.getElementById('kpi-ebit-pct').className = 'kpi-delta ' + ebitColor;
+  document.getElementById('kpi-ebit-pct').textContent = pct(ebitPct) + ' Marge';
+  document.getElementById('kpi-units').textContent = fmtI(units);
+  document.getElementById('kpi-units-sub').textContent = fmt(vkBrutto) + ' / Stück';
+
+  // P&L ROWS
+  const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  set('p-umsatz', fmt(bruttoUmsatz));
+  set('p-mwst', '− ' + fmt(mwstBetrag));
+  set('p-mwst-pct', pct(mwstBetrag/bruttoUmsatz));
+  set('p-retoure', '− ' + fmt(retourBetrag));
+  set('p-retoure-pct', pct(retPct));
+  set('p-netto', fmt(nettoUmsatz));
+  set('p-netto-pct', pct(nettoUmsatz/bruttoUmsatz));
+  set('p-prod', '− ' + fmt(prodEur * units));
+  set('p-prod-pct', pct(prodEur * units / nettoUmsatz));
+  set('p-lager', '− ' + fmt(lager * units));
+  set('p-lager-pct', pct(lager * units / nettoUmsatz));
+  set('p-tuete', '− ' + fmt(tuete * units));
+  set('p-tuete-pct', pct(tuete * units / nettoUmsatz));
+  set('p-shopify', '− ' + fmt(shopifyPerUnit * units));
+  set('p-shopify-pct', pct(shopifyPerUnit * units / nettoUmsatz));
+  set('p-roh', fmt(rohertrag));
+  set('p-roh-pct', pct(rohPct));
+  set('p-ads', '− ' + fmt(adspend));
+  set('p-ads-pct', pct(adsPct));
+  set('p-opex', '− ' + fmt(opex));
+  set('p-opex-pct', pct(opexPct));
+  document.getElementById('p-ebit').textContent = fmt(ebit);
+  document.getElementById('p-ebit').className = 'pnl-amt ' + (ebit >= 0 ? 'c-green' : 'c-red');
+  set('p-ebit-pct', pct(ebitPct));
+
+  // BARS
+  const barCogs = Math.min(cogsPct * 100, 100);
+  const barAds  = Math.min(adsPct * 100, 100);
+  const barOpex = Math.min(opexPct * 100, 100);
+  const barEbit = Math.max(Math.min(ebitPct * 100, 100), 0);
+  document.getElementById('bar-cogs').style.width = barCogs + '%';
+  document.getElementById('bar-ads').style.width = barAds + '%';
+  document.getElementById('bar-opex').style.width = barOpex + '%';
+  document.getElementById('bar-ebit').style.width = barEbit + '%';
+  document.getElementById('bar-cogs-val').textContent = pct(cogsPct);
+  document.getElementById('bar-ads-val').textContent = pct(adsPct);
+  document.getElementById('bar-opex-val').textContent = pct(opexPct);
+  document.getElementById('bar-ebit-val').textContent = pct(ebitPct);
+  document.getElementById('bar-ebit-val').className = ebit >= 0 ? 'c-green' : 'c-red';
+
+  // TARGETS
+  // Adspend needed for breakeven: ebit = rohertrag - adspend - opex = 0
+  // rohertrag = (adspend*mer - mwst - ret) / vkNetto * (vkNetto - varCost) 
+  // Simplify: nettoPerEuro = (1 - MWST/(1+MWST) - retPct) = nettoUmsatz/bruttoUmsatz
+  const nettoRatio = (nettoUmsatz / bruttoUmsatz);
+  const varCostPerUnit = prodEur + lager + tuete + shopifyPerUnit;
+  const grossMarginPct = (vkNetto - varCostPerUnit) / vkNetto;
+  // EBIT = adspend*mer*nettoRatio*grossMarginPct - adspend - opex
+  // 0 = adspend*(mer*nettoRatio*grossMarginPct - 1) - opex
+  const coeff = mer * nettoRatio * grossMarginPct - 1;
+  const beAdspend = coeff > 0 ? opex / coeff : null;
+  const a5k = coeff > 0 ? (opex + 5000) / coeff : null;
+  const a10k = coeff > 0 ? (opex + 10000) / coeff : null;
+
+  document.getElementById('t-be-adspend').textContent = beAdspend ? fmt(beAdspend) : 'nicht erreichbar';
+  document.getElementById('t-5k').textContent = a5k ? fmt(a5k) : 'nicht erreichbar';
+  document.getElementById('t-10k').textContent = a10k ? fmt(a10k) : 'nicht erreichbar';
+}
+
+['adspend','mer','prod','lager','tuete','opex','vk','retoure'].forEach(id =>
+  document.getElementById(id).addEventListener('input', calc));
+
+calc();
+</script>
+</body>
+</html>
